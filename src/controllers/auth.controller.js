@@ -30,10 +30,10 @@ export async function signIn(req, res) {
             return res.status(401).send("E-mail ou senha incorretos.");
         }
 
-        await db.collection("session").findOneAndDelete({ userId: userDB._id });
+        await db.collection("sessions").findOneAndDelete({ userId: userDB._id });
 
         const token = uuid();
-        await db.collection("session").insertOne({ userId: userDB._id, token });
+        await db.collection("sessions").insertOne({ userId: userDB._id, token });
 
         res.send(token);
 

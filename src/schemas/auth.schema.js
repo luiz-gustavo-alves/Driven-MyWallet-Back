@@ -2,7 +2,7 @@ import joi from "joi";
 
 export const signUpSchema = joi.object({
 
-    name: joi.string().regex(/^[a-zA-Z\s]*$/).required(),
+    name: joi.string().regex(/[A-Za-zÀ-ÖØ-öø-ÿ]/).required(),
     email: joi.string().required(),
     password: joi.string().min(3).required()
 });
