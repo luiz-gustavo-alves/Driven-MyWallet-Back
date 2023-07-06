@@ -3,20 +3,11 @@ import { v4 as uuid } from "uuid";
 import dotenv from "dotenv";
 import db from "../database/db.js";
 
-import { signInSchema, signUpSchema } from "../schemas/auth.schema.js";
-
 dotenv.config();
 
-export async function signIn(req, res) {
+export const signIn = async(req, res) => {
 
-    const { email, password } = req.body;
-
-    const validation = signInSchema.validate({...req.body}, { abortEarly: false });
-
-    if (validation.error) {
-        const errors = validation.error.details.map((detail) => detail.message);
-        return res.status(422).send(errors);
-    }
+    const { email, password } = req.data;
 
     try {
 
@@ -42,16 +33,9 @@ export async function signIn(req, res) {
     }
 }
 
-export async function signUp(req, res) {
+export const signUp = async (req, res) => {
 
-    const { name, email, password } = req.body;
-
-    const validation = signUpSchema.validate({...req.body}, { abortEarly: false });
-
-    if (validation.error) {
-        const errors = validation.error.details.map((detail) => detail.message);
-        return res.status(422).send(errors);
-    }
+    const { name, email, password } = req.data;
 
     try {
 

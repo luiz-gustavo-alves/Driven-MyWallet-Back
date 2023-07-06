@@ -21,6 +21,7 @@
     "joi": "^17.9.2",
     "mongodb": "^5.6.0",
     "nodemon": "^2.0.22",
+    "string-strip-html": "^13.4.1",
     "uuid": "^9.0.0"
   }
 }
