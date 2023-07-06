@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import db from "../database/db.js";
 
-import { transationSchema } from "../schemas/transation.schema.js";
+import { transactionSchema } from "../schemas/transaction.schema.js";
 
 export async function getTransactions(req, res) {
 
@@ -21,21 +21,23 @@ export async function getTransactions(req, res) {
             return res.sendStatus(401);
         }
 
-        const transationDb = await db.collection("transations").findOne({ userId: sessionDB.userId });
+        const transactionDb = await db.collection("transactions").findOne({ userId: sessionDB.userId });
 
-        const transationsList = {
-            username: transationDb.name,
-            transations: (transationDb.transations).reverse()
+        console.log(transactionDb);
+
+        const transactionsList = {
+            username: transactionDb.name,
+            transactions: (transactionDb.transactions).reverse()
         };
 
-        res.send(transationsList);
+        res.send(transactionsList);
 
     } catch (err) {
         res.status(500).send(err.message);
     }
 }
 
-export async function newTransation(req, res) {
+export async function newTransaction(req, res) {
     
     const { value, description } = req.body;
     const { type } = req.params;
@@ -47,7 +49,7 @@ export async function newTransation(req, res) {
         return res.sendStatus(401);
     }
 
-    const validationBody = transationSchema.validate({...req.body, type}, { abortEarly: false });
+    const validationBody = transactionSchema.validate({...req.body, type}, { abortEarly: false });
 
     if (validationBody.error) {
         const errors = validationBody.error.details.map((detail) => detail.message);
@@ -68,7 +70,7 @@ export async function newTransation(req, res) {
             return res.sendStatus(401);
         }
 
-        const transationInfo = {
+        const transactionInfo = {
 
             value: parseFloat(value.toFixed(2)),
             description: description,
@@ -76,21 +78,21 @@ export async function newTransation(req, res) {
             date: dayjs().locale('pt-br').format('DD/MM')
         }
 
-        const transationsDB = await db.collection("transations").findOne({ userId: userDB._id }); 
+        const transactionsDB = await db.collection("transactions").findOne({ userId: userDB._id }); 
 
-        if (!transationsDB) {
+        if (transactionsDB) {
 
-            await db.collection("transations").insertOne({ 
-                userId: userDB._id,
-                name: userDB.name,
-                transations: [transationInfo]
+            await db.collection("transactions").findOneAndUpdate(
+                { userId: userDB._id },
+                { $push: { transactions: transactionInfo }
             });
 
         } else {
 
-            await db.collection("transations").findOneAndUpdate(
-            { userId: userDB._id },
-            { $push: { transations: transationInfo }
+            await db.collection("transactions").insertOne({ 
+                userId: userDB._id,
+                name: userDB.name,
+                transactions: [transactionInfo]
             });
         }
 

@@ -5,7 +5,7 @@ import { connectToDatabase } from "./database/db.js";
 
 /* Import Routers */
 import authRouter from "./routers/auth.route.js";
-import transactionRouter from "./routers/transation.route.js";
+import transactionRouter from "./routers/transaction.route.js";
 
 dotenv.config();
 connectToDatabase();

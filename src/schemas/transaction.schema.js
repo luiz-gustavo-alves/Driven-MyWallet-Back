@@ -1,6 +1,6 @@
 import joi from "joi";
 
-export const transationSchema = joi.object({
+export const transactionSchema = joi.object({
 
     value: joi.number().greater(0).required(),
     description: joi.string().required(),
