@@ -6,13 +6,7 @@ export const getTransactions = async (req, res) => {
     try {
 
         const transactionDb = await db.collection("transactions").findOne({ userId: req.sessionID });
-
-        const transactionsList = {
-            username: transactionDb.name,
-            transactions: (transactionDb.transactions).reverse()
-        };
-
-        res.send(transactionsList);
+        res.send((transactionDb.transactions).reverse());
 
     } catch (err) {
         res.status(500).send(err.message);
