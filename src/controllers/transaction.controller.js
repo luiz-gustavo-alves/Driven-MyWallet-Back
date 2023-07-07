@@ -6,7 +6,19 @@ export const getTransactions = async (req, res) => {
     try {
 
         const transactionDb = await db.collection("transactions").findOne({ userId: req.sessionID });
-        res.send((transactionDb.transactions).reverse());
+        
+        if (transactionDb) {
+
+            const transactionList = {
+                total: transactionDb.total,
+                transactions: (transactionDb.transactions).reverse()
+            };
+
+            res.send(transactionList);
+
+        } else {
+            res.send({});
+        }
 
     } catch (err) {
         res.status(500).send(err.message);
@@ -32,20 +44,23 @@ export const newTransaction = async (req, res) => {
             date: dayjs().locale('pt-br').format('DD/MM')
         }
 
-        const transactionsDB = await db.collection("transactions").findOne({ userId: userDB._id }); 
+        const transactionsDB = await db.collection("transactions").findOne({ userId: userDB._id });
 
         if (transactionsDB) {
 
-            await db.collection("transactions").findOneAndUpdate(
+            const updateTotal = transactionInfo.type === "entrada" ?
+                (transactionsDB.total + transactionInfo.value) : (transactionsDB.total - transactionInfo.value);
+
+            await db.collection("transactions").updateOne(
                 { userId: userDB._id },
-                { $push: { transactions: transactionInfo }
-            });
+                { $set: { total: updateTotal }, $push: { transactions: transactionInfo } }
+            );
 
         } else {
 
             await db.collection("transactions").insertOne({ 
                 userId: userDB._id,
-                name: userDB.name,
+                total: transactionInfo.value,
                 transactions: [transactionInfo]
             });
         }
