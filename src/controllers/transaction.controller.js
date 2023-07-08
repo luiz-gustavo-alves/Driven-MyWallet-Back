@@ -4,9 +4,7 @@ import db from "../database/db.js";
 export const getTransactions = async (req, res) => {
 
     try {
-
         const transactionDb = await db.collection("transactions").findOne({ userId: req.sessionID });
-        
         if (transactionDb) {
 
             const transactionList = {
@@ -17,7 +15,7 @@ export const getTransactions = async (req, res) => {
             res.send(transactionList);
 
         } else {
-            res.send({});
+            res.send([]);
         }
 
     } catch (err) {
@@ -30,9 +28,7 @@ export const newTransaction = async (req, res) => {
     const { value, description, type } = req.data;
 
     try {
-
         const userDB = await db.collection("users").findOne({ _id: req.sessionID });
-
         if (!userDB) {
             return res.sendStatus(401);
         }

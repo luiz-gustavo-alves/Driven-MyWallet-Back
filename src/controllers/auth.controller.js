@@ -10,17 +10,16 @@ export const signIn = async(req, res) => {
     const { email, password } = req.data;
 
     try {
-
         const userDB = await db.collection("users").findOne({ email });
-
         if (!userDB) {
-            return res.status(404).send("E-mail ou senha incorretos.");
+            return res.sendStatus(404);
         }
 
         if (!bcrypt.compareSync(password, userDB.password)) {
-            return res.status(401).send("E-mail ou senha incorretos.");
+            return res.sendStatus(401);
         }
 
+        /* If session token exists, deletes token from database. */
         await db.collection("sessions").findOneAndDelete({ userId: userDB._id });
 
         const token = uuid();
@@ -38,9 +37,7 @@ export const signUp = async (req, res) => {
     const { name, email, password } = req.data;
 
     try {
-
         const userDB = await db.collection("users").findOne({ email });
-
         if (userDB) {
             return res.status(409).send("E-mail já cadastrado!");
         }
