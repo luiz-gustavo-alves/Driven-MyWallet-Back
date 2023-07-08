@@ -7,9 +7,12 @@ export const getTransactions = async (req, res) => {
         const transactionDb = await db.collection("transactions").findOne({ userId: req.sessionID });
         if (transactionDb) {
 
+            const formatTotal = (transactionDb.total.toFixed(2)).replace(".", ",");
+            const recentTransactions = (transactionDb.transactions).reverse();
+
             const transactionList = {
-                total: transactionDb.total,
-                transactions: (transactionDb.transactions).reverse()
+                total: formatTotal,
+                transactions: recentTransactions
             };
 
             res.send(transactionList);
@@ -33,8 +36,11 @@ export const newTransaction = async (req, res) => {
             return res.sendStatus(401);
         }
 
+        const numValue = parseFloat(value.toFixed(2));
+        const formatValue = (value.toFixed(2)).replace(".", ",");
+
         const transactionInfo = {
-            value: parseFloat(value.toFixed(2)),
+            value: formatValue,
             description: description,
             type: type,
             date: dayjs().locale('pt-br').format('DD/MM')
@@ -45,7 +51,7 @@ export const newTransaction = async (req, res) => {
         if (transactionsDB) {
 
             const updateTotal = transactionInfo.type === "entrada" ?
-                (transactionsDB.total + transactionInfo.value) : (transactionsDB.total - transactionInfo.value);
+                (transactionsDB.total + numValue) : (transactionsDB.total - numValue);
 
             await db.collection("transactions").updateOne(
                 { userId: userDB._id },
@@ -60,7 +66,6 @@ export const newTransaction = async (req, res) => {
                 transactions: [transactionInfo]
             });
         }
-
         res.sendStatus(201);
 
     } catch (err) {
