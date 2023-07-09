@@ -48,10 +48,11 @@ export const newTransaction = async (req, res) => {
             const updateTotal = transactionInfo.type === "entrada" ?
                 (transactionsDB.total + transactionInfo.value) : (transactionsDB.total - transactionInfo.value);
 
-            await db.collection("transactions").updateOne(
-                { userId: userDB._id },
-                { $set: { total: updateTotal }, $push: { transactions: transactionInfo } }
-            );
+            await db.collection("transactions").updateOne({ userId: userDB._id },
+            { $set:
+                {   total: updateTotal },
+                    $push: { transactions: transactionInfo }
+            });
 
         } else {
 
@@ -72,37 +73,32 @@ export const newTransaction = async (req, res) => {
 
 export const deleteTransaction = async (req, res) => {
 
-    let { index } = req.data;
-    index = Number(index);
+    const { index } = req.data;
+    const transactionDB = req.transactionDB;
+
+    const transactionInfo = transactionDB.transactions[index];
+    const updateTotal = transactionInfo.type === "entrada" ?
+        (transactionDB.total - transactionInfo.value) : (transactionDB.total + transactionInfo.value);
 
     try {
 
-        const transactionDB = await db.collection("transactions").findOne({ userId: req.sessionID });
-        if (!transactionDB || index > transactionDB.transactions.length) {
-            return res.sendStatus(403);
-        }
-
-        const transactionInfo = transactionDB.transactions[index];
-
-        const updateTotal = transactionInfo.type === "entrada" ?
-            (transactionDB.total - transactionInfo.value) : (transactionDB.total + transactionInfo.value);
-
-        /* Delete array element by index */
-        await db.collection("transactions").updateOne({ userId: req.sessionID},
+        /* Updates total amount and delete array element by index */
+        await db.collection("transactions").updateOne({ userId: req.sessionID },
         [{ $set:
-            { transactions: {
-                $concatArrays: [ 
-                    { $slice: [ "$transactions", index ]}, 
-                    { $slice: [ "$transactions", { $add: [1, index]}, { $size:"$transactions" }]}
-                ]
-        }}}]);
+            {   total: updateTotal,
+                transactions:
+                {
+                    $concatArrays: [
+                        { $slice: [ "$transactions", index ]}, 
+                        { $slice: [ "$transactions", { $add: [1, index]}, { $size:"$transactions" }]}
+                    ]
+                }
+            }
+        }]);
 
-        /* If last transaction is removed, deletes this document from database transactions collection */
+        /* If last transaction is removed, deletes document from database transactions collection */
         if (transactionDB.transactions.length === 1) {
             await db.collection("transactions").deleteOne({ userId: req.sessionID });
-
-        } else {
-            await db.collection("transactions").updateOne({ userId: req.sessionID }, { $set : { total: updateTotal }});
         }
 
         res.sendStatus(204);
@@ -111,3 +107,45 @@ export const deleteTransaction = async (req, res) => {
         res.status(500).send(err.message);
     }
 }
+
+export const getTransactionByIndex = async (req, res) => {
+
+    const { index } = req.data;
+    const transactionDB = req.transactionDB;
+
+    const transactionInfo = transactionDB.transactions[index];
+    res.send(transactionInfo);
+}
+
+export const updateTransaction = async (req, res) => {
+
+    const { value, description, type, index } = req.data;
+    const transactionDB = req.transactionDB;
+    
+    const currentTransactionInfo = req.transactionDB.transactions[index];
+    if (type !== currentTransactionInfo.type) {
+        return res.sendStatus(403);
+    }
+
+    try {
+
+        const total = transactionDB.total;
+        const oldValue = currentTransactionInfo.value;
+
+        const updateTotal = currentTransactionInfo.type === "entrada" ? 
+            ((total - oldValue) + value) : ((total + oldValue) - value);
+
+        /* Updates both total amount and array element by index */
+        await db.collection("transactions").updateOne({ userId: req.sessionID },
+        { $set: {
+            total: parseFloat(updateTotal.toFixed(2)),
+            [`transactions.${index}.value`]: value,
+            [`transactions.${index}.description`]: description }
+        });
+
+        res.sendStatus(200);
+
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+} 
