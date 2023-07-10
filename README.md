@@ -28,6 +28,11 @@ RegisterSchema = {
   confirmPassword: 'confirmação de senha do usuário'
 }
 
+SessionSchema = {
+  userID: `ID do usuário`,
+  token: `token do usuário`
+}
+
 TransactionSchema = {
   userID: `ID do usuário`,
   total: `saldo total das transações do usuário`,
